@@ -4,7 +4,8 @@ import java.awt.image.BufferedImage;
 public class Game extends GameState{
 	private final int LITTLE = 0, BIG = 1;
 
-	private BufferedImage [] ball;
+	private BufferedImage [] ballImage;
+	private BufferedImage [] paddleImage;
 
 	public Game(GameStateManager gsm, Loader loader){
 		super(gsm,loader);
@@ -12,9 +13,17 @@ public class Game extends GameState{
 	}
 
 	public void init(Loader l){
-		ball = new BufferedImage[2];
-		ball[LITTLE] = l.image("bolap.png");
-		ball[BIG] = l.image("bolab.png");
+		Image i = new Image();
+		ballImage = new BufferedImage[2];
+		paddleImage = new BufferedImage[2];
+
+		ballImage[LITTLE] = l.image("bolap.png");
+		ballImage[BIG] = l.image("bolab.png");
+
+		paddleImage[LITTLE] = l.image("paddlep");
+		paddleImage[BIG] = l.image("paddleb");
+
+
 	}
 
 	public void update(double delta){
