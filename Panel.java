@@ -14,8 +14,8 @@ import java.awt.event.MouseListener;
 import java.awt.Font;
 
 public class Panel extends JPanel implements Runnable,KeyListener,MouseListener{
-	public static final int WIDTH = 240;
-	public static final int HEIGHT = 200;
+	public static final int WIDTH = 720;
+	public static final int HEIGHT = 600;
 	private boolean running;
 	private Thread thread;
 	private BufferedImage stage;
@@ -41,7 +41,7 @@ public class Panel extends JPanel implements Runnable,KeyListener,MouseListener{
 	}
 
 	private void init(){
-		stage = new BufferedImage(WIDTH+20,HEIGHT+20,BufferedImage.TYPE_INT_RGB);
+		stage = new BufferedImage(260,200,BufferedImage.TYPE_INT_RGB);
 		g = (Graphics2D) stage.getGraphics();
 		g.setBackground(new Color(68,80,128));
 		g.setFont(new Font("Arial",Font.BOLD, 24));
@@ -68,8 +68,8 @@ public class Panel extends JPanel implements Runnable,KeyListener,MouseListener{
 			gsm.update(delta);
 			gsm.draw(g);
 			Graphics g2 = getGraphics();
-			g2.drawImage(stage,0,0,null);
-			g2.dispose();
+			g2.drawImage(stage,0,0,WIDTH+10,HEIGHT+10,null);
+			g2.dispose(); 	
 
 			try{
 				Thread.sleep((lastLoopTime - System.nanoTime() + optimal_time) / 1000000);
