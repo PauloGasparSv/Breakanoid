@@ -3,6 +3,7 @@ import java.awt.image.BufferedImage;
 import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
 import java.util.Random;
+import java.awt.Color;
 
 public class Game extends GameState{
 	private final int LITTLE = 0, BIG = 1, WARNING = 7, LINE =11, RED = 0, LIGHTGREEN = 1, BROWN = 2, GREEN = 3, 
@@ -13,7 +14,7 @@ public class Game extends GameState{
 	private BufferedImage [] blocksImage;
 	private BufferedImage [] pipes;
 	private BufferedImage back;
-	private BufferedImage spaceImg, leftImg,rightImg;
+	private BufferedImage spaceImg, leftImg,rightImg, heart;
 
 	private int [][] blocks;
 	private float [] position;
@@ -29,8 +30,10 @@ public class Game extends GameState{
 	private float ball_speedX, ball_speedY;
 
 	private int numBlocks;
-
 	private boolean start;
+	private int lives;
+	private boolean lose;
+	private boolean win;
 
 	public Game(GameStateManager gsm, Loader loader){
 		super(gsm,loader);
@@ -51,8 +54,8 @@ public class Game extends GameState{
 
 		for(int line = 0; line < 15; line++){
 			for(int col = 0; col < 15; col++){
-				blocks[line][col] = line > 5 && line < 8 && col > 1 && col < 13? 1 : -1;
-				blocks[line][col] = line > 3 && line < 6 &&  col > 1 && col < 13 ? 2 : blocks[line][col];
+				blocks[line][col] = line > 5 && line < 8 && col > 1 && col < 13? 0 : -1;
+				blocks[line][col] = line > 3 && line < 6 &&  col > 1 && col < 13 ? 0 : blocks[line][col];
 			}
 		}
 
@@ -69,6 +72,7 @@ public class Game extends GameState{
 		spaceImg = l.image("space.png");
 		leftImg = l.image("left.png");
 		rightImg = l.image("right.png");
+		heart = l.image("heart.png");
 
 		temp = l.image("c_pipe.png");
 		pipes[0] = i.split(temp,2)[0];
@@ -90,132 +94,148 @@ public class Game extends GameState{
 		currentBall = 0;
 		start = false;
 		mod = 0.025f;
-		numBlocks = 33;
+		numBlocks = 46;
+		lives = 4;
+		lose = false;
+		win = false;
 	}
 
 	public void update(double delta){
-		if(right && start){
-			if(position[X] + delta + speed*delta < 253 -  width[currentPaddle])
-				position[X] += speed*delta;
-		}
-		else if(left && start){
-			if(position[X] - delta - speed*delta > 9)
-				position[X] -=  speed*delta;
-		}
-
-		if(new Rectangle((int)(ball_position[X]) ,(int)(ball_position[Y]),6,5).intersects(
-			new Rectangle((int)position[X]-1, (int)position[Y] , 2,7))){
-			if(ball_speedX > 0)
-				ball_speedX = -ball_speedX;
-			ball_position[X] += delta*ball_speedX;
-			if(ball_speedY > 0 && ball_position[Y] < position[Y]+3){
-				ball_speedY = -ball_speedY;
-				ball_position[Y] += delta*ball_speedY;
+		if(!lose && !win){
+			if(right && start){
+				if(position[X] + delta + speed*delta < 253 -  width[currentPaddle])
+					position[X] += speed*delta;
 			}
-		}
-		else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y] ),6,6).intersects(
-			new Rectangle((int)position[X]+width[currentPaddle]-1, (int)position[Y], 2,7))){
-			if(ball_speedX < 0)
-				ball_speedX = -ball_speedX;
-			ball_position[X] += delta*ball_speedX;
-			if(ball_speedY > 0 && ball_position[Y] < position[Y] + 3){
-				ball_speedY = -ball_speedY;
-				ball_position[Y] += delta*ball_speedY; 
+			else if(left && start){
+				if(position[X] - delta - speed*delta > 9)
+					position[X] -=  speed*delta;
 			}
-		}
-		
-		if(new Rectangle((int)(ball_position[X]) ,(int)(ball_position[Y] ),6,6).intersects(
-			new Rectangle((int)position[X] + 1, (int)position[Y], width[currentPaddle]-2, 1)) ){
-				ball_speedY = -ball_speedY;
-		}
-		else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),6,6).intersects(
-			new Rectangle((int)position[X] + 1, (int)position[Y]+6, width[currentPaddle]-2, 1))){
-				ball_speedY = -ball_speedY;
-		}
 
-		
-		if(!start && space)
-			start = true;
-
-		
-
-
-		for(int line = 0; line < 15; line++){
-			for(int col = 0; col < 15; col++){
-				if(blocks[line][col] != -1){
-					boolean hitX,hitY;
-					hitX = hitY = false;
-					if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
-						new Rectangle(9 + col * 16, 6 + line * 8, 2 , 6))){
-							ball_speedX = -ball_speedX;
-							blocks[line][col] --;
-							if(blocks[line][col] == 7)
-								blocks[line][col] = 6;
-							hitX = true;
-							acBall();
-							
-					}
-					else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
-						new Rectangle(26 + col * 16, 6 + line * 8, 2 , 6))){
-							ball_speedX = -ball_speedX;
-							blocks[line][col] --;
-							if(blocks[line][col] == 7)
-								blocks[line][col] = 6;
-							hitX = true;
-							acBall();
-					}
-
-					if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
-						new Rectangle(10 + col * 16, 5 + line * 8, 16 , 1))){
-							//ball_speedX = -ball_speedX;
-							ball_speedY = -ball_speedY;
-							blocks[line][col] --;
-							if(blocks[line][col] == 7)
-								blocks[line][col] = 6;
-							hitY = true;
-							acBall();
-					}
-					else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
-						new Rectangle(10 + col * 16, 13 + line * 8, 16 , 1))){
-							//ball_speedX = -ball_speedX;
-							ball_speedY = -ball_speedY;
-							blocks[line][col] --;
-							if(blocks[line][col] == 7)
-								blocks[line][col] = 6;
-							hitY = true;
-							acBall();
-					}
-					if(hitX)
-						ball_position[X] += delta*ball_speedX;
-					if(hitY)
-						ball_position[Y] += delta*ball_speedY;
+			if(new Rectangle((int)(ball_position[X]) ,(int)(ball_position[Y]),6,5).intersects(
+				new Rectangle((int)position[X]-1, (int)position[Y] , 2,7))){
+				if(ball_speedX > 0)
+					ball_speedX = -ball_speedX;
+				ball_position[X] += delta*ball_speedX;
+				if(ball_speedY > 0 && ball_position[Y] < position[Y]+3){
+					ball_speedY = -ball_speedY;
+					ball_position[Y] += delta*ball_speedY;
 				}
 			}
+			else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y] ),6,6).intersects(
+				new Rectangle((int)position[X]+width[currentPaddle]-1, (int)position[Y], 2,7))){
+				if(ball_speedX < 0)
+					ball_speedX = -ball_speedX;
+				ball_position[X] += delta*ball_speedX;
+				if(ball_speedY > 0 && ball_position[Y] < position[Y] + 3){
+					ball_speedY = -ball_speedY;
+					ball_position[Y] += delta*ball_speedY; 
+				}
+			}
+			
+			if(new Rectangle((int)(ball_position[X]) ,(int)(ball_position[Y] ),6,6).intersects(
+				new Rectangle((int)position[X] + 1, (int)position[Y], width[currentPaddle]-2, 1)) ){
+					ball_speedY = -ball_speedY;
+			}
+			else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),6,6).intersects(
+				new Rectangle((int)position[X] + 1, (int)position[Y]+6, width[currentPaddle]-2, 1))){
+					ball_speedY = -ball_speedY;
+			}
+
+			
+			if(!start && space)
+				start = true;
+
+			
+
+
+			for(int line = 0; line < 15; line++){
+				for(int col = 0; col < 15; col++){
+					if(blocks[line][col] > -1){
+						boolean hitX,hitY;
+						hitX = hitY = false;
+						if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
+							new Rectangle(9 + col * 16, 6 + line * 8, 2 , 6))){
+								ball_speedX = -ball_speedX;
+								blocks[line][col] --;
+								if(blocks[line][col] == 7)
+									blocks[line][col] = 6;
+								hitX = true;
+								acBall();
+								if(blocks[line][col] < 0)
+									numBlocks --;
+								
+						}
+						else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
+							new Rectangle(26 + col * 16, 6 + line * 8, 2 , 6))){
+								ball_speedX = -ball_speedX;
+								blocks[line][col] --;
+								if(blocks[line][col] == 7)
+									blocks[line][col] = 6;
+								hitX = true;
+								acBall();
+								if(blocks[line][col] < 0)
+									numBlocks --;
+						}
+
+						if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
+							new Rectangle(10 + col * 16, 5 + line * 8, 16 , 1))){
+								//ball_speedX = -ball_speedX;
+								ball_speedY = -ball_speedY;
+								blocks[line][col] --;
+								if(blocks[line][col] == 7)
+									blocks[line][col] = 6;
+								hitY = true;
+								acBall();
+								if(blocks[line][col] < 0)
+									numBlocks --;
+						}
+						else if(new Rectangle((int)(ball_position[X] ) ,(int)(ball_position[Y]),8,8).intersects(
+							new Rectangle(10 + col * 16, 13 + line * 8, 16 , 1))){
+								//ball_speedX = -ball_speedX;
+								ball_speedY = -ball_speedY;
+								blocks[line][col] --;
+								if(blocks[line][col] == 7)
+									blocks[line][col] = 6;
+								hitY = true;
+								acBall();
+								if(blocks[line][col] <0)
+									numBlocks --;
+						}
+						if(hitX)
+							ball_position[X] += delta*ball_speedX;
+						if(hitY)
+							ball_position[Y] += delta*ball_speedY;
+					}
+				}
+			}
+			System.out.println(numBlocks);
+
+			if(ball_position[Y]  > 200 && start){
+				start = false;
+				ball_position[X] = 34;
+				ball_position[Y] = 110;
+				position[X] = 115;
+				position[Y] = 160;
+				ball_speedX = 1f;
+				ball_speedY = -1f;
+				lives --;
+				if(lives == 0)
+					lose = true;
+			}
+
+			if(start){
+				if(ball_position[X] < 10 || ball_position[X] > 250)
+					ball_speedX = -ball_speedX;
+				if(ball_position[Y] < 8)
+					ball_speedY = -ball_speedY;
+				ball_position[X] += delta*ball_speedX;
+				ball_position[Y] += delta*ball_speedY;
+			}
+
+			if(numBlocks<= 0)
+				win = true;
+			
 		}
-
-		System.out.println(ball_speedX);
-
-		if(ball_position[Y]  > 200 && start){
-			start = false;
-			ball_position[X] = 34;
-			ball_position[Y] = 110;
-			position[X] = 115;
-			position[Y] = 160;
-			ball_speedX = 1f;
-			ball_speedY = -1f;
-		}
-
-		if(start){
-			if(ball_position[X] < 10 || ball_position[X] > 250)
-				ball_speedX = -ball_speedX;
-			if(ball_position[Y] < 8)
-				ball_speedY = -ball_speedY;
-			ball_position[X] += delta*ball_speedX;
-			ball_position[Y] += delta*ball_speedY;
-		}
-		
-
-
 	}
 
 	private void acBall(){
@@ -248,17 +268,20 @@ public class Game extends GameState{
 			for(int y=0;y<7;y++)
 				g.drawImage(back,x * 32 - 15,y * 32 - 15,null);
 
-		for(int line = 0; line < 15; line++){
-			//if(line<7)
-				g.drawImage(blocksImage[7], 10+line * 16,183,null);
-			for(int col = 0; col < 15; col++)
-				if(blocks[line][col] > -1)
-					g.drawImage(blocksImage[blocks[line][col]], 10+col * 16,5+line * 8,null);
-		}
-	
-		g.drawImage(paddleImage[currentPaddle],(int)position[X],(int)position[Y],null);
-		g.drawImage(ballImage[currentBall],(int)ball_position[X], (int)ball_position[Y],null);
+		if(!lose && !win){
+			for(int line = 0; line < 15; line++){
+				//if(line<7)
+					g.drawImage(blocksImage[7], 10+line * 16,183,null);
+				for(int col = 0; col < 15; col++)
+					if(blocks[line][col] > -1)
+						g.drawImage(blocksImage[blocks[line][col]], 10+col * 16,5+line * 8,null);
+			}
 		
+			g.drawImage(paddleImage[currentPaddle],(int)position[X],(int)position[Y],null);
+			g.drawImage(ballImage[currentBall],(int)ball_position[X], (int)ball_position[Y],null);
+			
+		}
+
 		g.drawImage(pipes[LEFT],4,1,null);
 		g.drawImage(pipes[RIGHT],250,1,null);
 		for(int i=0; i <10; i++){
@@ -267,10 +290,21 @@ public class Game extends GameState{
 			g.drawImage(pipes[VERTICAL],250,7+i*24,null);
 		}
 
-		if(!start){
+		if(!start && !win && !lose){
 			g.drawImage(spaceImg, 80,50,null);
 			g.drawImage(leftImg, 76,146,35,30,null);
 			g.drawImage(rightImg, 136,146,35,30,null);
+			for(int i=0; i<lives ;i++){
+				g.drawImage(heart,60 + i * 50 + (3-lives)*25,30,35,30,null);
+			}
+		}
+		if(lose){
+			g.setColor(Color.WHITE);
+			g.drawString("You lose!",80,100);
+		}
+		if(win){
+			g.setColor(Color.WHITE);
+			g.drawString("You won!",80,100);
 		}
 
 	}
